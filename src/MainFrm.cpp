@@ -1,5 +1,5 @@
 
-// MainFrm.cpp : CMainFrame ÀàµÄÊµÏÖ
+// MainFrm.cpp : CMainFrame ï¿½ï¿½ï¿½Êµï¿½ï¿½
 //
 
 #include "stdafx.h"
@@ -9,169 +9,269 @@
 #include "LeftView.h"
 #include "MarkdownEditorView.h"
 #include "MarkdownEditorDoc.h"
+#include "TocView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
 #define IS_VIEWER_KEY  "isViewer"
-void saveViewer(bool enable) //°ÑÊÇ·ñÎªÔÄ¶ÁÆ÷Ä£Ê½±£´æµ½×¢²á±í,·½±ãÏÂ´Î´ò¿ª³ÌÐòÊ±×Ô¶¯Ê¹ÓÃÖ®Ç°µÄ×´Ì¬
+#define IS_TOC_KEY "isTocVisible"
+
+void saveViewer(bool enable)
 {
 	int value = enable ? 1 : 0;
 	AfxGetApp()->WriteProfileInt("", IS_VIEWER_KEY, value);
 }
-bool isViewer() //¸ù¾Ý
+
+bool isViewer()
 {
 	int value = AfxGetApp()->GetProfileInt("", IS_VIEWER_KEY, 0);
 	return value == 1;
 }
+
+void saveTocVisible(bool enable)
+{
+	int value = enable ? 1 : 0;
+	AfxGetApp()->WriteProfileInt("", IS_TOC_KEY, value);
+}
+
+bool isTocVisible()
+{
+	int value = AfxGetApp()->GetProfileInt("", IS_TOC_KEY, 1);
+	return value == 1;
+}
+
 // CMainFrame
 
 IMPLEMENT_DYNCREATE(CMainFrame, CFrameWnd)
 
-	BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
-		ON_WM_CREATE()
-		ON_WM_SIZE()
-		ON_COMMAND(IDM_SWITCH, &CMainFrame::OnSwitch)
-		ON_COMMAND(IDM_ABOUT, &CMainFrame::OnAbout)
-	END_MESSAGE_MAP()
+BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
+	ON_WM_CREATE()
+	ON_WM_SIZE()
+	ON_COMMAND(IDM_SWITCH, &CMainFrame::OnSwitch)
+	ON_COMMAND(IDM_ABOUT, &CMainFrame::OnAbout)
+	ON_COMMAND(IDM_TOGGLE_TOC, &CMainFrame::OnToggleToc)
+END_MESSAGE_MAP()
 
-	static UINT indicators[] =
+static UINT indicators[] =
+{
+	ID_SEPARATOR,
+	ID_INDICATOR_CAPS,
+	ID_INDICATOR_NUM,
+	ID_INDICATOR_SCRL,
+};
+
+// CMainFrame ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½
+
+CMainFrame::CMainFrame()
+{
+	_bInited = false;
+	_bShowLeft = !isViewer();
+	_bShowToc = isTocVisible();
+}
+
+CMainFrame::~CMainFrame()
+{
+}
+
+int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+	if (CFrameWnd::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+	this->MoveWindow(0, 0, 1000, 700);
+	this->CenterWindow();
+
+	if (!m_wndStatusBar.Create(this))
 	{
-		ID_SEPARATOR,           // ×´Ì¬ÐÐÖ¸Ê¾Æ÷
-		ID_INDICATOR_CAPS,
-		ID_INDICATOR_NUM,
-		ID_INDICATOR_SCRL,
-	};
+		TRACE0("Î´ï¿½Ü´ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½\n");
+		return -1;
+	}
+	m_wndStatusBar.SetIndicators(indicators, sizeof(indicators) / sizeof(UINT));
+	return 0;
+}
 
-	// CMainFrame ¹¹Ôì/Îö¹¹
+BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT /*lpcs*/,
+	CCreateContext* pContext)
+{
+	CRect rect;
+	this->GetWindowRect(&rect);
 
-	CMainFrame::CMainFrame()
+	if (!m_wndOuterSplitter.CreateStatic(this, 1, 2))
+		return FALSE;
+
+	if (!m_wndInnerSplitter.CreateStatic(&m_wndOuterSplitter, 1, 2, 
+		WS_CHILD | WS_VISIBLE | WS_BORDER,
+		m_wndOuterSplitter.IdFromRowCol(0, 1)))
 	{
-		_bInited = false;
-		_bShowLeft = !isViewer();
-		// TODO: ÔÚ´ËÌí¼Ó³ÉÔ±³õÊ¼»¯´úÂë
+		m_wndOuterSplitter.DestroyWindow();
+		return FALSE;
 	}
 
-	CMainFrame::~CMainFrame()
+	CSize tocSize(180, rect.Height() / 2);
+	CSize editorSize((rect.Width() - 180) / 2, rect.Height() / 2);
+	CSize previewSize((rect.Width() - 180) / 2, rect.Height() / 2);
+
+	if (!m_wndOuterSplitter.CreateView(0, 0, RUNTIME_CLASS(CTocView), tocSize, pContext))
 	{
+		m_wndOuterSplitter.DestroyWindow();
+		m_wndInnerSplitter.DestroyWindow();
+		return FALSE;
 	}
 
-	int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
+	if (!m_wndInnerSplitter.CreateView(0, 0, RUNTIME_CLASS(CLeftView), editorSize, pContext) ||
+		!m_wndInnerSplitter.CreateView(0, 1, RUNTIME_CLASS(CMarkdownEditorView), previewSize, pContext))
 	{
-		if (CFrameWnd::OnCreate(lpCreateStruct) == -1)
-			return -1;
-
-		this->MoveWindow(0,0,800,600);
-		this->CenterWindow();
-
-		if (!m_wndStatusBar.Create(this))
-		{
-			TRACE0("Î´ÄÜ´´½¨×´Ì¬À¸\n");
-			return -1;      // Î´ÄÜ´´½¨
-		}
-		m_wndStatusBar.SetIndicators(indicators, sizeof(indicators)/sizeof(UINT));
-		return 0;
+		m_wndOuterSplitter.DestroyWindow();
+		m_wndInnerSplitter.DestroyWindow();
+		return FALSE;
 	}
 
-	BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT /*lpcs*/,
-		CCreateContext* pContext)
-	{
-		// ´´½¨²ð·Ö´°¿Ú
-		if (!m_wndSplitter.CreateStatic(this, 1, 2))
-			return FALSE;
+	_bInited = true;
+	return TRUE;
+}
 
-		CRect rect;
-		this->GetWindowRect(&rect);
-		CSize size(rect.Width() /2 , rect.Height() /2);
+BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
+{
+	if (!CFrameWnd::PreCreateWindow(cs))
+		return FALSE;
+	return TRUE;
+}
 
-		if (!m_wndSplitter.CreateView(0, 0, RUNTIME_CLASS(CLeftView), size, pContext) ||
-			!m_wndSplitter.CreateView(0, 1, RUNTIME_CLASS(CMarkdownEditorView), size, pContext))
-		{
-			m_wndSplitter.DestroyWindow();
-			return FALSE;
-		}
-
-		_bInited = true;
-		return TRUE;
-	}
-
-	BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
-	{
-		if( !CFrameWnd::PreCreateWindow(cs) )
-			return FALSE;
-		// TODO: ÔÚ´Ë´¦Í¨¹ýÐÞ¸Ä
-		//  CREATESTRUCT cs À´ÐÞ¸Ä´°¿ÚÀà»òÑùÊ½
-
-		return TRUE;
-	}
-
-	// CMainFrame Õï¶Ï
+// CMainFrame ï¿½ï¿½ï¿½
 
 #ifdef _DEBUG
-	void CMainFrame::AssertValid() const
+void CMainFrame::AssertValid() const
+{
+	CFrameWnd::AssertValid();
+}
+
+void CMainFrame::Dump(CDumpContext& dc) const
+{
+	CFrameWnd::Dump(dc);
+}
+#endif
+
+// CMainFrame ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+
+void CMainFrame::OnSize(UINT nType, int cx, int cy)
+{
+	CFrameWnd::OnSize(nType, cx, cy);
+	if (!_bInited)
+		return;
+	if (cx == 0 || cy == 0)
+		return;
+
+	CRect rect;
+	GetWindowRect(&rect);
+
+	if (_bShowToc)
 	{
-		CFrameWnd::AssertValid();
+		int tocWidth = 180;
+		int remaining = cx - tocWidth;
+
+		m_wndOuterSplitter.SetColumnInfo(0, tocWidth, 50);
+		m_wndOuterSplitter.RecalcLayout();
+
+		if (_bShowLeft && remaining > 0)
+		{
+			m_wndInnerSplitter.SetColumnInfo(0, remaining / 2, 10);
+			m_wndInnerSplitter.RecalcLayout();
+		}
 	}
-
-	void CMainFrame::Dump(CDumpContext& dc) const
+	else
 	{
-		CFrameWnd::Dump(dc);
-	}
-#endif //_DEBUG
-
-
-	// CMainFrame ÏûÏ¢´¦Àí³ÌÐò
-
-
-	void CMainFrame::OnSize(UINT nType, int cx, int cy)
-	{
-		CFrameWnd::OnSize(nType, cx, cy);
-		if(!_bInited)
-			return;
-		if(cx == 0 || cy == 0)
-			return;
-		int cxCur, cxMin;
-		m_wndSplitter.GetColumnInfo(0, cxCur, cxMin); 
-		if(cxCur <= 0)
-			return;
-		m_wndSplitter.SetColumnInfo(0,cx/2,10);
-		m_wndSplitter.RecalcLayout();
-
-		//´ò¿ªÊ±±£ÁôÉÏ´ÎÊÇ·ñÏÔÊ¾×ó²à±à¼­¿òµÄ×´Ì¬
-		static bool sFirst = true;
-		if (sFirst) {
-			sFirst = false;
-			bool show = isViewer();
-			if (show)
-				switchViewer(show);
+		if (_bShowLeft)
+		{
+			m_wndInnerSplitter.SetColumnInfo(0, cx / 2, 10);
+			m_wndInnerSplitter.RecalcLayout();
 		}
 	}
 
-
-	void CMainFrame::OnSwitch(){
-		_bShowLeft = !_bShowLeft;
-		switchViewer(!_bShowLeft);
-		saveViewer(!_bShowLeft);
+	static bool sFirst = true;
+	if (sFirst) {
+		sFirst = false;
+		bool showViewer = isViewer();
+		bool showToc = isTocVisible();
+		if (showViewer)
+			switchViewer(showViewer);
+		if (!showToc)
+			switchToc(showToc);
 	}
-	void CMainFrame::switchViewer(bool viewer) {
-		m_wndSplitter.ShowLeft(!viewer);
-	}
+}
 
+void CMainFrame::OnSwitch() {
+	_bShowLeft = !_bShowLeft;
+	switchViewer(!_bShowLeft);
+	saveViewer(!_bShowLeft);
+}
 
-	const string STR_ABOUT = "# MarkdownEditor 1.2\nProject: <https://github.com/jijinggang/MarkdownEditor>\n## Author\njijinggang@gmail.com\n## Copyright\nFree For All";
-	//×¢Òâ£¬´ËÏàÓ¦º¯Êý±ØÐë·ÅÔÚMainFrameÖÐ£¬Èç¹û·ÅÔÚMarkdownEditorViewÖÐ£¬Èç¹ûMarkdownEditorViewÊ§È¥½¹µã£¬Ôò²Ëµ¥²»ÄÜµã
-	void CMainFrame::OnAbout()
+void CMainFrame::switchViewer(bool viewer) {
+	m_wndInnerSplitter.ShowLeft(!viewer);
+}
+
+void CMainFrame::OnToggleToc() {
+	_bShowToc = !_bShowToc;
+	switchToc(_bShowToc);
+	saveTocVisible(_bShowToc);
+}
+
+void CMainFrame::switchToc(bool show) {
+	CWnd* pToc = m_wndOuterSplitter.GetPane(0, 0);
+	if (pToc == NULL)
+		return;
+
+	CRect rect;
+	GetWindowRect(&rect);
+
+	if (show)
 	{
-		static bool s_bShowAbout = false;
-		CMarkdownEditorView* pView = dynamic_cast<CMarkdownEditorView*>(m_wndSplitter.GetPane(0,1));
-		if(pView == NULL)
-			return;
-		if(!s_bShowAbout)
-			pView->UpdateMd(STR_ABOUT);
-		else{
-			CLeftView* pLeft = dynamic_cast<CLeftView*>(m_wndSplitter.GetPane(0,0));
-			pView->GetDocument()->UpdateAllViews(pLeft, LPARAM_Update);
-		}
-		s_bShowAbout = !s_bShowAbout;
+		m_wndOuterSplitter.SetColumnInfo(0, 180, 50);
+		pToc->ShowWindow(SW_SHOW);
 	}
+	else
+	{
+		m_wndOuterSplitter.SetColumnInfo(0, 0, 0);
+		pToc->ShowWindow(SW_HIDE);
+	}
+
+	m_wndOuterSplitter.RecalcLayout();
+}
+
+CMarkdownEditorView* CMainFrame::GetRightPane()
+{
+	return dynamic_cast<CMarkdownEditorView*>(m_wndInnerSplitter.GetPane(0, 1));
+}
+
+CMarkdownEditorView* CMainFrame::GetPreviewView()
+{
+	return dynamic_cast<CMarkdownEditorView*>(m_wndInnerSplitter.GetPane(0, 1));
+}
+
+CLeftView* CMainFrame::GetEditorView()
+{
+	return dynamic_cast<CLeftView*>(m_wndInnerSplitter.GetPane(0, 0));
+}
+
+CTocView* CMainFrame::GetTocView()
+{
+	return dynamic_cast<CTocView*>(m_wndOuterSplitter.GetPane(0, 0));
+}
+
+const string STR_ABOUT = "# MarkdownEditor 1.3\nProject: <https://github.com/jijinggang/MarkdownEditor>\n## Features\n- Native sidebar with H1-H6 headings tree view\n- KaTeX math formula support: $E=mc^2$\n- Full Unicode/UTF-8 support\n\n## Math Examples\n- Inline: $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$\n- Block: $$\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$$\n\n## Author\njijinggang@gmail.com\n## Copyright\nFree For All";
+
+void CMainFrame::OnAbout()
+{
+	static bool s_bShowAbout = false;
+	CMarkdownEditorView* pView = dynamic_cast<CMarkdownEditorView*>(m_wndInnerSplitter.GetPane(0, 1));
+	if (pView == NULL)
+		return;
+	if (!s_bShowAbout)
+		pView->UpdateMd(STR_ABOUT);
+	else {
+		CLeftView* pLeft = dynamic_cast<CLeftView*>(m_wndInnerSplitter.GetPane(0, 0));
+		pView->GetDocument()->UpdateAllViews(pLeft, LPARAM_Update);
+	}
+	s_bShowAbout = !s_bShowAbout;
+}
