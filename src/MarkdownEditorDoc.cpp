@@ -172,13 +172,18 @@ void CMarkdownEditorDoc::Dump(CDumpContext& dc) const
 const CString PREFIX_MODIFIED = "* ";
 void setModified(CMarkdownEditorDoc*pDoc, bool modified) {
 	pDoc->SetModifiedFlag(modified);
-	//string path = pDoc->GetTitle();
 	CString title = pDoc->GetTitle();
 	if (modified) {
 		CString strTitle;
 		AfxGetMainWnd()->GetWindowText(strTitle);
-		if (modified && strTitle.Find(PREFIX_MODIFIED) !=0)
+		if (strTitle.Find(PREFIX_MODIFIED) != 0)
 			AfxGetMainWnd()->SetWindowText("* " + strTitle);
+	}
+	
+	CMainFrame* pMainFrame = (CMainFrame*)AfxGetMainWnd();
+	if (pMainFrame)
+	{
+		pMainFrame->UpdateStatusBar();
 	}
 }
 // CMarkdownEditorDoc ����
