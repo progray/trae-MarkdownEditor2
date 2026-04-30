@@ -1,17 +1,18 @@
 
-// MarkdownEditorDoc.cpp : CMarkdownEditorDoc ÀàµÄÊµÏÖ
+// MarkdownEditorDoc.cpp : CMarkdownEditorDoc ï¿½ï¿½ï¿½Êµï¿½ï¿½
 //
 
 #include "stdafx.h"
 #include "./Util.h"
 #include <memory>
-// SHARED_HANDLERS ¿ÉÒÔÔÚÊµÏÖÔ¤ÀÀ¡¢ËõÂÔÍ¼ºÍËÑË÷É¸Ñ¡Æ÷¾ä±úµÄ
-// ATL ÏîÄ¿ÖĞ½øĞĞ¶¨Òå£¬²¢ÔÊĞíÓë¸ÃÏîÄ¿¹²ÏíÎÄµµ´úÂë¡£
+// SHARED_HANDLERS ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¸Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+// ATL ï¿½ï¿½Ä¿ï¿½Ğ½ï¿½ï¿½Ğ¶ï¿½ï¿½å£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½ï¿½ï¿½ï¿½ë¡£
 #ifndef SHARED_HANDLERS
 #include "MarkdownEditor.h"
 #endif
 
 #include "MarkdownEditorDoc.h"
+#include "MainFrm.h"
 
 #include <propkey.h>
 
@@ -28,11 +29,11 @@ BEGIN_MESSAGE_MAP(CMarkdownEditorDoc, CDocument)
 END_MESSAGE_MAP()
 
 
-// CMarkdownEditorDoc ¹¹Ôì/Îö¹¹
+// CMarkdownEditorDoc ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½
 
 CMarkdownEditorDoc::CMarkdownEditorDoc()
 {
-	// TODO: ÔÚ´ËÌí¼ÓÒ»´ÎĞÔ¹¹Ôì´úÂë
+	// TODO: ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ô¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	resetData();
 }
 
@@ -46,15 +47,15 @@ BOOL CMarkdownEditorDoc::OnNewDocument()
 		return FALSE;
 	resetData();
 	this->UpdateAllViews(NULL, LPARAM_Update);
-	// TODO: ÔÚ´ËÌí¼ÓÖØĞÂ³õÊ¼»¯´úÂë
-	// (SDI ÎÄµµ½«ÖØÓÃ¸ÃÎÄµµ)
+	// TODO: ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â³ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	// (SDI ï¿½Äµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¸ï¿½ï¿½Äµï¿½)
 	return TRUE;
 }
 
 
 
 
-// CMarkdownEditorDoc ĞòÁĞ»¯
+// CMarkdownEditorDoc ï¿½ï¿½ï¿½Ğ»ï¿½
 
 void CMarkdownEditorDoc::Serialize(CArchive& ar)
 {
@@ -64,25 +65,49 @@ void CMarkdownEditorDoc::Serialize(CArchive& ar)
 	if (ar.IsStoring())
 	{
 		ar.WriteString(Util::ANSIToUTF8(_strText.c_str()).c_str());
-		// TODO: ÔÚ´ËÌí¼Ó´æ´¢´úÂë
 	}
 	else
 	{
+		CFile* pFile = ar.GetFile();
+		ULONGLONG dwLen = pFile->GetLength();
+		if (dwLen > 0)
+		{
+			char* pBuf = new char[(size_t)dwLen + 2];
+			pBuf[dwLen] = 0;
+			pBuf[dwLen + 1] = 0;
+			pFile->Read(pBuf, (UINT)dwLen);
+			
+			_bIsUTF8 = (Util::IsTextUTF8(pBuf, (long)dwLen) != 0);
+			
+			_strText = Util::AnyToANSI(pBuf, (int)dwLen);
+			Util::ReplaceAllStr(_strText,"\r\n", "\n");
+			Util::ReplaceAllStr(_strText,"\n", "\r\n");
+			
+			delete[] pBuf;
+		}
+		else
+		{
+			_bIsUTF8 = true;
+			_strText = "";
+		}
 		
-		_strText = Util::ReadStringFile(*ar.GetFile()).c_str();
-		Util::ReplaceAllStr(_strText,"\r\n", "\n");
-		Util::ReplaceAllStr(_strText,"\n", "\r\n");
+		CMainFrame* pMainFrame = (CMainFrame*)AfxGetMainWnd();
+		if (pMainFrame)
+		{
+			pMainFrame->SetEncoding(_bIsUTF8 ? _T("UTF-8") : _T("ANSI"));
+			pMainFrame->UpdateStatusBar();
+		}
+		
 		this->UpdateAllViews(NULL,LPARAM_Update);
-		// TODO: ÔÚ´ËÌí¼Ó¼ÓÔØ´úÂë
 	}
 }
 
 #ifdef SHARED_HANDLERS
 
-// ËõÂÔÍ¼µÄÖ§³Ö
+// ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½Ö§ï¿½ï¿½
 void CMarkdownEditorDoc::OnDrawThumbnail(CDC& dc, LPRECT lprcBounds)
 {
-	// ĞŞ¸Ä´Ë´úÂëÒÔ»æÖÆÎÄµµÊı¾İ
+	// ï¿½Ş¸Ä´Ë´ï¿½ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½ï¿½Äµï¿½ï¿½ï¿½ï¿½ï¿½
 	dc.FillSolidRect(lprcBounds, RGB(255, 255, 255));
 
 	CString strText = _T("TODO: implement thumbnail drawing here");
@@ -100,14 +125,14 @@ void CMarkdownEditorDoc::OnDrawThumbnail(CDC& dc, LPRECT lprcBounds)
 	dc.SelectObject(pOldFont);
 }
 
-// ËÑË÷´¦Àí³ÌĞòµÄÖ§³Ö
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö§ï¿½ï¿½
 void CMarkdownEditorDoc::InitializeSearchContent()
 {
 	CString strSearchContent;
-	// ´ÓÎÄµµÊı¾İÉèÖÃËÑË÷ÄÚÈİ¡£
-	// ÄÚÈİ²¿·ÖÓ¦ÓÉ¡°;¡±·Ö¸ô
+	// ï¿½ï¿½ï¿½Äµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ¡ï¿½
+	// ï¿½ï¿½ï¿½İ²ï¿½ï¿½ï¿½Ó¦ï¿½É¡ï¿½;ï¿½ï¿½ï¿½Ö¸ï¿½
 
-	// ÀıÈç:  strSearchContent = _T("point;rectangle;circle;ole object;")£»
+	// ï¿½ï¿½ï¿½ï¿½:  strSearchContent = _T("point;rectangle;circle;ole object;")ï¿½ï¿½
 	SetSearchContent(strSearchContent);
 }
 
@@ -131,7 +156,7 @@ void CMarkdownEditorDoc::SetSearchContent(const CString& value)
 
 #endif // SHARED_HANDLERS
 
-// CMarkdownEditorDoc Õï¶Ï
+// CMarkdownEditorDoc ï¿½ï¿½ï¿½
 
 #ifdef _DEBUG
 void CMarkdownEditorDoc::AssertValid() const
@@ -156,8 +181,8 @@ void setModified(CMarkdownEditorDoc*pDoc, bool modified) {
 			AfxGetMainWnd()->SetWindowText("* " + strTitle);
 	}
 }
-// CMarkdownEditorDoc ÃüÁî
-//¸üĞÂÎÄ±¾ÄÚÈİ
+// CMarkdownEditorDoc ï¿½ï¿½ï¿½ï¿½
+//ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½
 void CMarkdownEditorDoc::UpdateText(const string& text, CView* pSender, bool bMoveToEnd){
 	_strText = text;
 	int lParam = LPARAM_Update;
@@ -172,4 +197,5 @@ void CMarkdownEditorDoc::resetData(void)
 {
 	_strText = "";
 	_strPath = "";
+	_bIsUTF8 = true;
 }
