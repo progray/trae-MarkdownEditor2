@@ -1,12 +1,12 @@
 
-// MarkdownEditorView.cpp : CMarkdownEditorView ÀàµÄÊµÏÖ
+// MarkdownEditorView.cpp : CMarkdownEditorView ï¿½ï¿½ï¿½Êµï¿½ï¿½
 //
 
 #include "stdafx.h"
 #include "Util.h"
 #include <string>
-// SHARED_HANDLERS ¿ÉÒÔÔÚÊµÏÖÔ¤ÀÀ¡¢ËõÂÔÍ¼ºÍËÑË÷É¸Ñ¡Æ÷¾ä±úµÄ
-// ATL ÏîÄ¿ÖÐ½øÐÐ¶¨Òå£¬²¢ÔÊÐíÓë¸ÃÏîÄ¿¹²ÏíÎÄµµ´úÂë¡£
+// SHARED_HANDLERS ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¸Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+// ATL ï¿½ï¿½Ä¿ï¿½Ð½ï¿½ï¿½Ð¶ï¿½ï¿½å£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½ï¿½ï¿½ï¿½ë¡£
 #ifndef SHARED_HANDLERS
 #include "MarkdownEditor.h"
 #endif
@@ -27,11 +27,11 @@ IMPLEMENT_DYNCREATE(CMarkdownEditorView, CHtmlView)
 BEGIN_MESSAGE_MAP(CMarkdownEditorView, CHtmlView)
 END_MESSAGE_MAP()
 
-// CMarkdownEditorView ¹¹Ôì/Îö¹¹
+// CMarkdownEditorView ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½
 
 CMarkdownEditorView::CMarkdownEditorView()
 {
-	// TODO: ÔÚ´Ë´¦Ìí¼Ó¹¹Ôì´úÂë
+	// TODO: ï¿½Ú´Ë´ï¿½ï¿½ï¿½ï¿½Ó¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	_bFirstNavigate = true;
 	initCSS();
 }
@@ -42,8 +42,8 @@ CMarkdownEditorView::~CMarkdownEditorView()
 
 BOOL CMarkdownEditorView::PreCreateWindow(CREATESTRUCT& cs)
 {
-	// TODO: ÔÚ´Ë´¦Í¨¹ýÐÞ¸Ä
-	//  CREATESTRUCT cs À´ÐÞ¸Ä´°¿ÚÀà»òÑùÊ½
+	// TODO: ï¿½Ú´Ë´ï¿½Í¨ï¿½ï¿½ï¿½Þ¸ï¿½
+	//  CREATESTRUCT cs ï¿½ï¿½ï¿½Þ¸Ä´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½
 
 	return CHtmlView::PreCreateWindow(cs);
 }
@@ -55,7 +55,7 @@ void CMarkdownEditorView::OnInitialUpdate()
 }
 
 
-// CMarkdownEditorView Õï¶Ï
+// CMarkdownEditorView ï¿½ï¿½ï¿½
 
 #ifdef _DEBUG
 void CMarkdownEditorView::AssertValid() const
@@ -68,7 +68,7 @@ void CMarkdownEditorView::Dump(CDumpContext& dc) const
 	CHtmlView::Dump(dc);
 }
 
-CMarkdownEditorDoc* CMarkdownEditorView::GetDocument() const // ·Çµ÷ÊÔ°æ±¾ÊÇÄÚÁªµÄ
+CMarkdownEditorDoc* CMarkdownEditorView::GetDocument() const // ï¿½Çµï¿½ï¿½Ô°æ±¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 {
 	ASSERT(m_pDocument->IsKindOf(RUNTIME_CLASS(CMarkdownEditorDoc)));
 	return (CMarkdownEditorDoc*)m_pDocument;
@@ -86,23 +86,42 @@ void setClickEvents(IHTMLDocument2* htmlDocument2, const char* dir) {
 	htmlDocument2->put_onclick(clickDispatch);
 }
 
-// CMarkdownEditorView ÏûÏ¢´¦Àí³ÌÐò
+// CMarkdownEditorView ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+
+BSTR UTF8ToBSTR(const char* utf8Str)
+{
+	if (utf8Str == NULL || *utf8Str == '\0')
+		return SysAllocString(L"");
+
+	int len = MultiByteToWideChar(CP_UTF8, 0, utf8Str, -1, NULL, 0);
+	if (len <= 0)
+		return SysAllocString(L"");
+
+	BSTR bstr = SysAllocStringLen(NULL, len - 1);
+	if (bstr == NULL)
+		return NULL;
+
+	MultiByteToWideChar(CP_UTF8, 0, utf8Str, -1, bstr, len);
+	return bstr;
+}
 
 void CMarkdownEditorView::NavigateHTML(const string& strHtml)
 {
 	IDispatch* pDoc = GetHtmlDocument();
 	if(NULL == pDoc)
 		return;
-	// È¡µÃÎÄµµÖÐµÄIPersistStreamInit¶ÔÏó
+
     CComPtr<IHTMLDocument2> pHtmlDoc;
-	HRESULT hr = pDoc ->QueryInterface(IID_IHTMLDocument2, (void**)&pHtmlDoc);
+	HRESULT hr = pDoc->QueryInterface(IID_IHTMLDocument2, (void**)&pHtmlDoc);
     if (FAILED(hr))
         return;
 
-	BSTR bstr = _com_util::ConvertStringToBSTR(strHtml.c_str());
-	// Creates a new one-dimensional array
+	string strHtmlUtf8 = Util::ANSIToUTF8(strHtml.c_str());
+	BSTR bstr = UTF8ToBSTR(strHtmlUtf8.c_str());
+
 	SAFEARRAY *psaStrings = SafeArrayCreateVector(VT_VARIANT, 0, 1);
 	if (psaStrings == NULL) {
+		SysFreeString(bstr);
 		pHtmlDoc->close();
 		return;
 	}
@@ -114,7 +133,7 @@ void CMarkdownEditorView::NavigateHTML(const string& strHtml)
 	hr = pHtmlDoc->write(psaStrings);
 
 	setClickEvents(pHtmlDoc, GetDocument()->getFilePath().c_str());
-	// SafeArrayDestroy calls SysFreeString for each BSTR
+
 	if (psaStrings != NULL) {
 		SafeArrayDestroy(psaStrings);
 		pHtmlDoc->close();
@@ -189,7 +208,7 @@ void CMarkdownEditorView::OnUpdate(CView* pSender, LPARAM /*lHint*/lParam, CObje
 
 
 
-	// TODO: ÔÚ´ËÌí¼Ó×¨ÓÃ´úÂëºÍ/»òµ÷ÓÃ»ùÀà
+	// TODO: ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½×¨ï¿½Ã´ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½
 }
 
 
@@ -219,7 +238,37 @@ string&  replaceImgSrc(string& str, string path)
 	}
 	return   str;
 }
-const string HTML_TMPL = "<html><head><style type=\"text/css\">{{0}}</style></head><body>{{1}}</body></html>";
+const string HTML_TMPL = 
+"<!DOCTYPE html>"
+"<html>"
+"<head>"
+"<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />"
+"<meta charset=\"UTF-8\">"
+"<style type=\"text/css\">{{0}}</style>"
+"<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css\" crossorigin=\"anonymous\">"
+"</head>"
+"<body>"
+"<div id=\"content\">{{1}}</div>"
+"<script src=\"https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js\" crossorigin=\"anonymous\"></script>"
+"<script src=\"https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js\" crossorigin=\"anonymous\"></script>"
+"<script type=\"text/javascript\">"
+"function renderMath() {"
+"    if (typeof renderMathInElement !== 'undefined' && document.getElementById('content')) {"
+"        renderMathInElement(document.getElementById('content'), {"
+"            delimiters: ["
+"                {left: '$$', right: '$$', display: true},"
+"                {left: '$', right: '$', display: false}"
+"            ],"
+"            throwOnError: false"
+"        });"
+"    } else {"
+"        setTimeout(renderMath, 100);"
+"    }"
+"}"
+"renderMath();"
+"</script>"
+"</body>"
+"</html>";
 
 string CMarkdownEditorView::GetMdHtml(const string& str){
 	string strHtml = HTML_TMPL;
