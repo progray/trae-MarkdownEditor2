@@ -1,5 +1,5 @@
 
-// MarkdownEditorDoc.h : CMarkdownEditorDoc ÀàµÄ½Ó¿Ú
+// MarkdownEditorDoc.h : CMarkdownEditorDoc ï¿½ï¿½Ä½Ó¿ï¿½
 //
 
 
@@ -15,22 +15,24 @@ class CMarkdownEditorDoc : public CDocument
 {
 private:
 	string _strText, _strPath;
+	bool _bIsUTF8;
 public:
 	void UpdateText(const string& text,  CView* pSender = NULL, bool bMoveToEnd = false);
 	const string& getText(){return _strText;} 
 	const string& getFilePath(){ return _strPath; }
+	bool IsUTF8() const { return _bIsUTF8; }
 
-protected: // ½ö´ÓÐòÁÐ»¯´´½¨
+protected: // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½ï¿½ï¿½
 	CMarkdownEditorDoc();
 	DECLARE_DYNCREATE(CMarkdownEditorDoc)
 
-// ÌØÐÔ
+// ï¿½ï¿½ï¿½ï¿½
 public:
 
-// ²Ù×÷
+// ï¿½ï¿½ï¿½ï¿½
 public:
 
-// ÖØÐ´
+// ï¿½ï¿½Ð´
 public:
 	virtual BOOL OnNewDocument();
 	virtual void Serialize(CArchive& ar);
@@ -39,7 +41,7 @@ public:
 	virtual void OnDrawThumbnail(CDC& dc, LPRECT lprcBounds);
 #endif // SHARED_HANDLERS
 
-// ÊµÏÖ
+// Êµï¿½ï¿½
 public:
 	virtual ~CMarkdownEditorDoc();
 #ifdef _DEBUG
@@ -49,12 +51,12 @@ public:
 
 protected:
 
-// Éú³ÉµÄÏûÏ¢Ó³Éäº¯Êý
+// ï¿½ï¿½ï¿½Éµï¿½ï¿½ï¿½Ï¢Ó³ï¿½äº¯ï¿½ï¿½
 protected:
 	DECLARE_MESSAGE_MAP()
 
 #ifdef SHARED_HANDLERS
-	// ÓÃÓÚÎªËÑË÷´¦Àí³ÌÐòÉèÖÃËÑË÷ÄÚÈÝµÄ Helper º¯Êý
+	// ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýµï¿½ Helper ï¿½ï¿½ï¿½ï¿½
 	void SetSearchContent(const CString& value);
 #endif // SHARED_HANDLERS
 private:

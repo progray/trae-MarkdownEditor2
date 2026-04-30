@@ -65,6 +65,9 @@
     <ClInclude Include="MyClickEvents.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="FileTreeView.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MarkdownEditor.cpp">
@@ -116,6 +119,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="MyClickEvents.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="FileTreeView.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

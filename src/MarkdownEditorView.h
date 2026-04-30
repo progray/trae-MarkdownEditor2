@@ -1,5 +1,5 @@
 
-// MarkdownEditorView.h : CMarkdownEditorView ÀàµÄ½Ó¿Ú
+// MarkdownEditorView.h : CMarkdownEditorView ï¿½ï¿½Ä½Ó¿ï¿½
 //
 
 #pragma once
@@ -12,30 +12,30 @@ private:
 	bool _bFirstNavigate;
 	string _strCSS;
 	void initCSS();
-	string GetMdHtml(const string& str);
 public:
 	void UpdateMd(const string& strMd);
+	string GetMdHtml(const string& str);
 
 private:
 	void NavigateHTML(const string& szHtml);
-protected: // ½ö´ÓÐòÁÐ»¯´´½¨
+protected: // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½ï¿½ï¿½
 	CMarkdownEditorView();
 	DECLARE_DYNCREATE(CMarkdownEditorView)
 
-// ÌØÐÔ
+// ï¿½ï¿½ï¿½ï¿½
 public:
 	CMarkdownEditorDoc* GetDocument() const;
 
-// ²Ù×÷
+// ï¿½ï¿½ï¿½ï¿½
 public:
 
-// ÖØÐ´
+// ï¿½ï¿½Ð´
 public:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 protected:
-	virtual void OnInitialUpdate(); // ¹¹ÔìºóµÚÒ»´Îµ÷ÓÃ
+	virtual void OnInitialUpdate(); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Îµï¿½ï¿½ï¿½
 
-// ÊµÏÖ
+// Êµï¿½ï¿½
 public:
 	virtual ~CMarkdownEditorView();
 #ifdef _DEBUG
@@ -45,7 +45,7 @@ public:
 
 protected:
 
-// Éú³ÉµÄÏûÏ¢Ó³Éäº¯Êý
+// ï¿½ï¿½ï¿½Éµï¿½ï¿½ï¿½Ï¢Ó³ï¿½äº¯ï¿½ï¿½
 protected:
 	DECLARE_MESSAGE_MAP()
 	virtual void OnUpdate(CView* /*pSender*/, LPARAM /*lHint*/, CObject* /*pHint*/);
@@ -53,7 +53,7 @@ public:
 //	virtual void OnNavigateComplete2(LPCTSTR strURL);
 };
 
-#ifndef _DEBUG  // MarkdownEditorView.cpp ÖÐµÄµ÷ÊÔ°æ±¾
+#ifndef _DEBUG  // MarkdownEditorView.cpp ï¿½ÐµÄµï¿½ï¿½Ô°æ±¾
 inline CMarkdownEditorDoc* CMarkdownEditorView::GetDocument() const
    { return reinterpret_cast<CMarkdownEditorDoc*>(m_pDocument); }
 #endif
