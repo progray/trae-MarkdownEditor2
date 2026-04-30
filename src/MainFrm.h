@@ -1,56 +1,65 @@
 
-// MainFrm.h : CMainFrame ÀàµÄ½Ó¿Ú
+// MainFrm.h : CMainFrame ï¿½ï¿½Ä½Ó¿ï¿½
 //
 
 #pragma once
 #include "MySplitterWnd.h"
 class CMarkdownEditorView;
+class CLeftView;
+class CTocView;
 
 class CMainFrame : public CFrameWnd
 {
 private:
 	bool _bInited;
 	bool _bShowLeft;
+	bool _bShowToc;
 	
-protected: // ½ö´ÓÐòÁÐ»¯´´½¨
+protected: // ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½ï¿½ï¿½
 	CMainFrame();
 	DECLARE_DYNCREATE(CMainFrame)
 
-// ÌØÐÔ
+// ï¿½ï¿½ï¿½ï¿½
 protected:
-	CMySplitterWnd m_wndSplitter;
+	CMySplitterWnd m_wndOuterSplitter;
+	CMySplitterWnd m_wndInnerSplitter;
 public:
 
-// ²Ù×÷
+// ï¿½ï¿½ï¿½ï¿½
 public:
 
-// ÖØÐ´
+// ï¿½ï¿½Ð´
 public:
 	virtual BOOL OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext);
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 
-// ÊµÏÖ
+// Êµï¿½ï¿½
 public:
 	virtual ~CMainFrame();
 	CMarkdownEditorView* GetRightPane();
+	CMarkdownEditorView* GetPreviewView();
+	CLeftView* GetEditorView();
+	CTocView* GetTocView();
 #ifdef _DEBUG
 	virtual void AssertValid() const;
 	virtual void Dump(CDumpContext& dc) const;
 #endif
 
-protected:  // ¿Ø¼þÌõÇ¶Èë³ÉÔ±
+protected:  // ï¿½Ø¼ï¿½ï¿½ï¿½Ç¶ï¿½ï¿½ï¿½Ô±
 	CStatusBar        m_wndStatusBar;
 
-// Éú³ÉµÄÏûÏ¢Ó³Éäº¯Êý
+// ï¿½ï¿½ï¿½Éµï¿½ï¿½ï¿½Ï¢Ó³ï¿½äº¯ï¿½ï¿½
 protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	DECLARE_MESSAGE_MAP()
 private:
 	void switchViewer(bool enable);
+	void switchToc(bool enable);
 public:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSwitch();
 	afx_msg void OnAbout();
+	afx_msg void OnToggleToc();
 };
 
 
