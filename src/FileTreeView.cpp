@@ -21,6 +21,7 @@ BEGIN_MESSAGE_MAP(CFileTreeView, CTreeView)
 END_MESSAGE_MAP()
 
 extern bool g_isOpenFile;
+extern bool s_bOpeningFile;
 
 CFileTreeView::CFileTreeView()
 {
@@ -177,6 +178,9 @@ void CFileTreeView::OnNMDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
 	*pResult = 0;
 	
+	if (s_bOpeningFile)
+		return;
+	
 	CTreeCtrl& treeCtrl = GetTreeCtrl();
 	HTREEITEM hItem = treeCtrl.GetSelectedItem();
 	if (!hItem)
@@ -210,7 +214,17 @@ void CFileTreeView::OnNMDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 			return;
 		if (nRet == IDYES)
 		{
-			if (!pDoc->OnSaveDocument(pDoc->GetPathName()))
+			CString strPathName = pDoc->GetPathName();
+			if (strPathName.IsEmpty())
+			{
+				CFileDialog dlg(FALSE, _T("md"), NULL, 
+					OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+					_T("Markdown Files (*.md)|*.md|All Files (*.*)|*.*||"), NULL);
+				if (dlg.DoModal() != IDOK)
+					return;
+				strPathName = dlg.GetPathName();
+			}
+			if (!pDoc->OnSaveDocument(strPathName))
 			{
 				AfxMessageBox(_T("Failed to save file!"), MB_OK | MB_ICONERROR);
 				return;
@@ -218,11 +232,13 @@ void CFileTreeView::OnNMDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 		}
 	}
 	
+	s_bOpeningFile = true;
 	CWaitCursor wait;
 	if (AfxGetApp()->OpenDocumentFile(strFilePath))
 	{
 		g_isOpenFile = true;
 	}
+	s_bOpeningFile = false;
 }
 
 void CFileTreeView::OnContextMenu(CWnd* pWnd, CPoint point)
