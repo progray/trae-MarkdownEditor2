@@ -89,13 +89,10 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT /*lpcs*/,
 	CCreateContext* pContext)
 {
-	CRect rect;
-	this->GetWindowRect(&rect);
-	
 	if (!m_wndSplitterMain.CreateStatic(this, 1, 2))
 		return FALSE;
 	
-	CSize sizeTree(rect.Width() / 5, rect.Height());
+	CSize sizeTree(200, 100);
 	if (!m_wndSplitterMain.CreateView(0, 0, RUNTIME_CLASS(CFileTreeView), sizeTree, pContext))
 	{
 		m_wndSplitterMain.DestroyWindow();
@@ -108,7 +105,7 @@ BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT /*lpcs*/,
 		return FALSE;
 	}
 
-	CSize sizePane((rect.Width() * 4 / 10), rect.Height() / 2);
+	CSize sizePane(200, 100);
 
 	if (!m_wndSplitter.CreateView(0, 0, RUNTIME_CLASS(CLeftView), sizePane, pContext) ||
 		!m_wndSplitter.CreateView(0, 1, RUNTIME_CLASS(CMarkdownEditorView), sizePane, pContext))
@@ -143,6 +140,13 @@ void CMainFrame::Dump(CDumpContext& dc) const
 
 void CMainFrame::UpdateStatusBar()
 {
+	if (!_bInited)
+		return;
+	if (!m_wndStatusBar.GetSafeHwnd())
+		return;
+	if (!::IsWindow(m_wndStatusBar.GetSafeHwnd()))
+		return;
+	
 	CMarkdownEditorDoc* pDoc = (CMarkdownEditorDoc*)GetActiveDocument();
 	CString strInfo;
 	
@@ -229,19 +233,20 @@ void CMainFrame::OnSize(UINT nType, int cx, int cy)
 	if(cx == 0 || cy == 0)
 		return;
 	
-	int cxCur, cxMin;
-	m_wndSplitterMain.GetColumnInfo(0, cxCur, cxMin);
-	if(cxCur <= 0)
-		cxCur = cx / 5;
-	m_wndSplitterMain.SetColumnInfo(0, cx / 5, 50);
-	m_wndSplitterMain.RecalcLayout();
-	
-	m_wndSplitter.GetColumnInfo(0, cxCur, cxMin);
-	if(cxCur <= 0)
-		return;
-	int cxRight = cx - (cx / 5);
-	m_wndSplitter.SetColumnInfo(0, cxRight / 2, 10);
-	m_wndSplitter.RecalcLayout();
+	if (m_wndSplitterMain.GetSafeHwnd() && m_wndSplitter.GetSafeHwnd())
+	{
+		int cxCur, cxMin;
+		m_wndSplitterMain.GetColumnInfo(0, cxCur, cxMin);
+		if(cxCur <= 0)
+			cxCur = cx / 5;
+		m_wndSplitterMain.SetColumnInfo(0, cx / 5, 50);
+		m_wndSplitterMain.RecalcLayout();
+		
+		m_wndSplitter.GetColumnInfo(0, cxCur, cxMin);
+		int cxRight = cx - (cx / 5);
+		m_wndSplitter.SetColumnInfo(0, cxRight / 2, 10);
+		m_wndSplitter.RecalcLayout();
+	}
 
 	static bool sFirst = true;
 	if (sFirst) {
@@ -259,6 +264,11 @@ void CMainFrame::OnSwitch(){
 	saveViewer(!_bShowLeft);
 }
 void CMainFrame::switchViewer(bool viewer) {
+	if (!m_wndSplitter.GetSafeHwnd())
+		return;
+	CWnd* pLeft = m_wndSplitter.GetPane(0, 0);
+	if (!pLeft || !pLeft->GetSafeHwnd())
+		return;
 	m_wndSplitter.ShowLeft(!viewer);
 }
 
