@@ -17,6 +17,8 @@
 #endif
 
 #define IS_VIEWER_KEY  "isViewer"
+bool s_bOpeningFile = false;
+
 void saveViewer(bool enable)
 {
 	int value = enable ? 1 : 0;
@@ -482,6 +484,14 @@ void CMainFrame::OnExportHtml()
 
 void CMainFrame::OnDropFiles(HDROP hDropInfo)
 {
+	extern bool s_bOpeningFile;
+	if (s_bOpeningFile)
+	{
+		::DragFinish(hDropInfo);
+		CFrameWnd::OnDropFiles(hDropInfo);
+		return;
+	}
+	
 	UINT nFiles = ::DragQueryFile(hDropInfo, 0xFFFFFFFF, NULL, 0);
 	
 	for (UINT i = 0; i < nFiles; i++)
@@ -504,24 +514,42 @@ void CMainFrame::OnDropFiles(HDROP hDropInfo)
 				if (nRet == IDCANCEL)
 				{
 					::DragFinish(hDropInfo);
+					CFrameWnd::OnDropFiles(hDropInfo);
 					return;
 				}
 				if (nRet == IDYES)
 				{
-					if (!pDoc->OnSaveDocument(pDoc->GetPathName()))
+					CString strPathName = pDoc->GetPathName();
+					if (strPathName.IsEmpty())
+					{
+						CFileDialog dlg(FALSE, _T("md"), NULL, 
+							OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+							_T("Markdown Files (*.md)|*.md|All Files (*.*)|*.*||"), this);
+						if (dlg.DoModal() != IDOK)
+						{
+							::DragFinish(hDropInfo);
+							CFrameWnd::OnDropFiles(hDropInfo);
+							return;
+						}
+						strPathName = dlg.GetPathName();
+					}
+					if (!pDoc->OnSaveDocument(strPathName))
 					{
 						AfxMessageBox(_T("Failed to save file!"), MB_OK | MB_ICONERROR);
 						::DragFinish(hDropInfo);
+						CFrameWnd::OnDropFiles(hDropInfo);
 						return;
 					}
 				}
 			}
 			
 			extern bool g_isOpenFile;
+			s_bOpeningFile = true;
 			if (AfxGetApp()->OpenDocumentFile(strFile))
 			{
 				g_isOpenFile = true;
 			}
+			s_bOpeningFile = false;
 			
 			break;
 		}
