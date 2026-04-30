@@ -1,4 +1,3 @@
-
 // MarkdownEditorView.h : CMarkdownEditorView ��Ľӿ�
 //
 
@@ -11,10 +10,15 @@ class CMarkdownEditorView : public CHtmlView
 private:
 	bool _bFirstNavigate;
 	string _strCSS;
+	string _strTempHtmlPath;
 	float _fScrollPercent;
-	UINT_PTR _nRestoreScrollTimer;
+	bool _bPendingScrollRestore;
 	void initCSS();
 	string GetMdHtml(const string& str);
+	bool WriteTempHtmlFile(const string& strHtml);
+	void CleanupTempHtml();
+	void RestoreScrollPosition();
+	void SetClickEventHandler();
 public:
 	void UpdateMd(const string& strMd);
 
@@ -51,6 +55,8 @@ protected:
 protected:
 	DECLARE_MESSAGE_MAP()
 	virtual void OnUpdate(CView* /*pSender*/, LPARAM /*lHint*/, CObject* /*pHint*/);
+	virtual void OnNavigateComplete2(LPCTSTR strURL);
+	virtual void OnDocumentComplete(LPCTSTR lpszURL);
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
 
@@ -58,4 +64,3 @@ protected:
 inline CMarkdownEditorDoc* CMarkdownEditorView::GetDocument() const
    { return reinterpret_cast<CMarkdownEditorDoc*>(m_pDocument); }
 #endif
-
