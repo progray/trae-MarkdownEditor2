@@ -11,6 +11,8 @@ class CMarkdownEditorView : public CHtmlView
 private:
 	bool _bFirstNavigate;
 	string _strCSS;
+	float _fScrollPercent;
+	UINT_PTR _nRestoreScrollTimer;
 	void initCSS();
 	string GetMdHtml(const string& str);
 public:
@@ -49,8 +51,7 @@ protected:
 protected:
 	DECLARE_MESSAGE_MAP()
 	virtual void OnUpdate(CView* /*pSender*/, LPARAM /*lHint*/, CObject* /*pHint*/);
-public:
-//	virtual void OnNavigateComplete2(LPCTSTR strURL);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
 
 #ifndef _DEBUG  // MarkdownEditorView.cpp �еĵ��԰汾
