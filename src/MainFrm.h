@@ -1,35 +1,45 @@
 
-// MainFrm.h : CMainFrame 类的接口
-//
-
 #pragma once
 #include "MySplitterWnd.h"
 class CMarkdownEditorView;
+
+enum StatusPaneIndex
+{
+	PANE_INFO = 0,
+	PANE_ENCODING,
+	PANE_WORDCOUNT,
+	PANE_CAPS,
+	PANE_NUM,
+	PANE_SCRL,
+};
 
 class CMainFrame : public CFrameWnd
 {
 private:
 	bool _bInited;
 	bool _bShowLeft;
+	bool _bShowTree;
+	CString m_strEncoding;
+	double m_dWordCount;
 	
-protected: // 仅从序列化创建
+protected:
 	CMainFrame();
 	DECLARE_DYNCREATE(CMainFrame)
 
-// 特性
-protected:
+public:
 	CMySplitterWnd m_wndSplitter;
-public:
+	CMySplitterWnd m_wndSplitterMain;
 
-// 操作
 public:
+	void UpdateStatusBar();
+	void SetEncoding(const CString& strEncoding) { m_strEncoding = strEncoding; }
+	void SetWordCount(double dCount) { m_dWordCount = dCount; }
 
-// 重写
 public:
 	virtual BOOL OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext);
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 
-// 实现
 public:
 	virtual ~CMainFrame();
 	CMarkdownEditorView* GetRightPane();
@@ -38,12 +48,13 @@ public:
 	virtual void Dump(CDumpContext& dc) const;
 #endif
 
-protected:  // 控件条嵌入成员
+protected:
 	CStatusBar        m_wndStatusBar;
 
-// 生成的消息映射函数
 protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnDropFiles(HDROP hDropInfo);
+	afx_msg void OnExportHtml();
 	DECLARE_MESSAGE_MAP()
 private:
 	void switchViewer(bool enable);
@@ -52,5 +63,4 @@ public:
 	afx_msg void OnSwitch();
 	afx_msg void OnAbout();
 };
-
 
